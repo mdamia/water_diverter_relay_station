@@ -36,24 +36,18 @@
 
 #include "arduino_secrets.h"
 // Include DallasTemperature and One wire
-#include <OneWire.h>
-#include <DallasTemperature.h>
+
 
 // Data wire is plugged into port 2 on the Arduino
-#define ONE_WIRE_BUS 4
-float waterTemp;
-float desiredWaterTemp = 100.00;
-char tp = 'F';
-int seconds = 0;
-float tf;
 
 
-// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-OneWire oneWire(ONE_WIRE_BUS);
+
+
+
 // init json doc
 JsonDocument jsonData;
-// Pass our oneWire reference to Dallas Temperature.
-DallasTemperature sensors(&oneWire);
+
+
 // valve connection
 
 int relayPIN = 26;
@@ -113,59 +107,9 @@ void loop() {
   delay(10000);  // Wait for 1000 millisecond(s)
   seconds += 1;
   int value = digitalRead(8);
-  // Serial.println(value);
-  tf = getWaterTemp();
-  Serial.println(tf);
-  if (tf > 0) {
-    if (tf <= desiredWaterTemp) {
-
-      Serial.println("Shower is Cold");
-    } else {
-
-      Serial.println("Shower is HOT");
-    }
-  } else {
-    Serial.println("Error: Could not read temperature data");
-  }
+  // Serial.println(value);  
 }
 
-
-
-float getWaterTemp() {
-  // call sensors.requestTemperatures() to issue a global temperature
-  // request to all devices on the bus
-  // Serial.print("Requesting temperatures...");
-  sensors.requestTemperatures();  // Send the command to get temperatures
-  // Serial.println("DONE");
-  // After we got the temperatures, we can print them here.
-  // We use the function ByIndex, and as an example get the temperature from the first sensor only.
-  float tempC = sensors.getTempCByIndex(0);
-  // Check if reading was successful
-  if (tempC != DEVICE_DISCONNECTED_C) {
-    Serial.print(tempC);
-    Serial.print("°C --- ");
-    float tempinFahrenheit = DallasTemperature::toFahrenheit(tempC);
-    Serial.print(DallasTemperature::toFahrenheit(tempC));  // Converts tempC to Fahrenheit
-    Serial.print("°F");
-    Serial.println();
-    return tempC, tempinFahrenheit;
-  } else {
-    Serial.println("Error: Could not read temperature data");
-    return 0.00;
-  }
-  return 0.00;
-}
-
-char getPreferredTemp(char c) {
-  switch (c) {
-    case 'F':
-      Serial.println("your temp preference is F");
-      break;
-    case 'C':
-      Serial.println("your temp preference is C");
-      break;
-  }
-}
 // web server fuctions
 
 void handleForm() {
