@@ -27,17 +27,33 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
+/*
+  water diverter valve 
+  pinMode default mode is HIGH
+  HIGH means the relay is open and the diverter valve is routing the water to the shower head 
+  LOW means the relay is closed and the diverter valve is routing the water back to the main tank 
+
+*/
 // include webservers libraries and arduino json library
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
-
 #include "arduino_secrets.h"
+#include "constants.h"
+
+
+struct ValveState {
+  int pinState;
+  String state;
+  String detail;
+};
+
 
 // valve connection
-int relayPIN = 26;
+int relayPIN = 27;
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;  // your network SSID (name)
@@ -46,10 +62,15 @@ int keyIndex = 0;           // your network key index number (needed only for WE
 
 WebServer server(80);
 
+
 void setup(void) {
+  ValveState vs;
   server.enableCORS(true);
   pinMode(relayPIN, OUTPUT);
-  digitalWrite(relayPIN, LOW);
+  digitalWrite(relayPIN, HIGH);
+  vs.pinState = 1;
+  vs.state = "OPENED";
+  vs.detail = ValveOpenedMessage;
   // start serial port
   Serial.begin(115200);
   // set the wifi mode
@@ -71,18 +92,8 @@ void setup(void) {
     Serial.println("MDNS responder started");
   }
 
-  server.on("/relaystatus", []() {
-    int relayStatus = digitalRead(relayPIN);
+  server.on("/relaystatus", handleValveState);
 
-    Serial.printf("relay status is :  %d", relayStatus);
-    Serial.println("");
-    if (relayStatus == 1) {
-      server.send(200, "text/plain", "1");
-    } else {
-      server.send(200, "text/plain", "0");
-    }
-  });
-  
   server.on(F("/togglerelay"), handleForm);
   server.onNotFound(handleNotFound);
   server.begin();
@@ -93,28 +104,58 @@ void loop() {
   server.handleClient();
   delay(1000);  // Wait for 1000 millisecond(s)
   int value = digitalRead(8);
-  // Serial.println(value);  
+  // Serial.println(value);
 }
 
 // web server fuctions
 
 void handleForm() {
+  ValveState vs;
   Serial.println(server.method());
-  
+
   if (server.method() == HTTP_POST) {
-
     Serial.printf("relay status is :  %d \n\n", digitalRead(relayPIN));
-
     Serial.println(server.arg(0));
+
     if (server.arg(0) == "1") {
       digitalWrite(relayPIN, HIGH);
+      vs.pinState = 1;
+      vs.state = "OPENED";
+      vs.detail = ValveOpenedMessage;
+
       Serial.printf("new relay status is :  %d \n\n", digitalRead(relayPIN));
-      server.send(200, "text/plain", "{\"status\":\"1\"}");
+      // server.send(200, "text/plain", "{\"status\":\"1\"}");
+      server.send(200, "application/json", "{\"pinState\":\"" + String(vs.pinState) + "\",\"valveState\":\"" + vs.state + "\",\"detail\":\"" + vs.detail + "\"}");
     } else {
       digitalWrite(relayPIN, LOW);
+
+      vs.pinState = 0;
+      vs.state = "CLOSED";
+      vs.detail = ValveClosedMessage;
+
       Serial.printf("new relay status is :  %d \n\n", digitalRead(relayPIN));
-      server.send(200, "text/plain", "{\"status\":\"0\"}");
+      // server.send(200, "text/plain", "{\"status\":\"0\"}");
+      server.send(200, "application/json", "{\"pinState\":\"" + String(vs.pinState) + "\",\"valveState\":\"" + vs.state + "\",\"detail\":\"" + vs.detail + "\"}");
     }
+  }
+}
+
+void handleValveState() {
+  int relayStatus = digitalRead(relayPIN);
+  ValveState vs;
+  Serial.printf("relay status is :  %d", relayStatus);
+  Serial.println("");
+  if (relayStatus == 1) {
+    vs.pinState = 1;
+    vs.state = "OPENED";
+    vs.detail = ValveOpenedMessage;
+    // server.send(200, "text/plain", "1");
+    server.send(200, "application/json", "{\"pinState\":\"" + String(vs.pinState) + "\",\"valveState\":\"" + vs.state + "\",\"detail\":\"" + vs.detail + "\"}");
+  } else {
+    vs.pinState = 0;
+    vs.state = "CLOSED";
+    vs.detail = ValveClosedMessage;
+    server.send(200, "application/json", "{\"pinState\":\"" + String(vs.pinState) + "\",\"valveState\":\"" + vs.state + "\",\"detail\":\"" + vs.detail + "\"}");
   }
 }
 void handleNotFound() {
