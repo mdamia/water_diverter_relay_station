@@ -1,0 +1,7 @@
+{
+    "board": "esp32:esp32:esp32da",
+    "port": "/dev/tty.usbserial-0001",
+    "output": "../ArduinoOutput",
+    "sketch": "water_diverter.ino",
+    "arduino.commandPath": "arduino-cli"
+}

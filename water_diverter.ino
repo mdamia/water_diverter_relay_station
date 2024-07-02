@@ -35,21 +35,8 @@
 #include <ArduinoJson.h>
 
 #include "arduino_secrets.h"
-// Include DallasTemperature and One wire
-
-
-// Data wire is plugged into port 2 on the Arduino
-
-
-
-
-
-// init json doc
-JsonDocument jsonData;
-
 
 // valve connection
-
 int relayPIN = 26;
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
@@ -104,8 +91,7 @@ void setup(void) {
 
 void loop() {
   server.handleClient();
-  delay(10000);  // Wait for 1000 millisecond(s)
-  seconds += 1;
+  delay(1000);  // Wait for 1000 millisecond(s)
   int value = digitalRead(8);
   // Serial.println(value);  
 }
