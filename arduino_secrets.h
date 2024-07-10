@@ -1,2 +1,2 @@
-#define SECRET_SSID "pepper"
-#define SECRET_PASS "20@to#anew$start20"
+#define SECRET_SSID "yourssid"
+#define SECRET_PASS "yourpassword"
